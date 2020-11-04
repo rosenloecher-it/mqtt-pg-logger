@@ -1,0 +1,13 @@
+[Unit]
+Description=MQTT Postgres Logger
+
+[Service]
+Type=simple
+ExecStart=/opt/mqtt-pg-loggere/mqtt-pg-logger.sh -s -p -c /opt/mqtt-pg-logger/mqtt-pg-logger.yaml
+Restart=always
+RestartSec=60
+WorkingDirectory=/opt/mqtt-pg-logger
+User=pi
+
+[Install]
+WantedBy=multi-user.target

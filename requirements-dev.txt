@@ -1,0 +1,4 @@
+-r requirements.txt
+
+flake8
+testing.postgresql == 1.3
