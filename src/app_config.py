@@ -3,9 +3,9 @@ import os
 import yaml
 from jsonschema import validate
 
-from src.database import DATABASE_JSONSCHEMA
 from src.app_logging import LOGGING_JSONSCHEMA
-from src.mqtt import MQTT_JSONSCHEMA
+from src.database import DATABASE_JSONSCHEMA
+from src.mqtt_client import MQTT_JSONSCHEMA
 
 
 CONFIG_JSONSCHEMA = {

@@ -5,10 +5,9 @@ import click
 
 from src.app_config import AppConfig
 from src.app_logging import AppLogging, LOGGING_CHOICES, LOGGING_DEFAULT_LOG_LEVEL
-from src.creator import Creator
-from src.database import Database
-from src.mqtt import Mqtt
+from src.schema_creator import SchemaCreator
 from src.runner import Runner
+
 
 _logger = logging.getLogger(__name__)
 
@@ -46,36 +45,9 @@ _logger = logging.getLogger(__name__)
     is_flag=True,
     help="Systemd/journald integration: skip timestamp + prints to console"
 )
-def _run_service(config_file, create, log_file, log_level, print_logs, systemd_mode):
-    """Logs MQTT messages to a Postgres database."""
-
-    mqtt = Mqtt()
-    database = Database()
-
+def _main(config_file, create, log_file, log_level, print_logs, systemd_mode):
     try:
-        # click.echo("config: %s" % config_file)
-        # click.echo("log_file: %s" % log_file)
-        # click.echo("log_level: %s" % log_level)
-        # click.echo("print_logs: %s" % print_logs)
-        # click.echo("systemd_mode: %s" % systemd_mode)
-
-        app_config = AppConfig(config_file)
-        AppLogging.configure(
-            app_config.get_logging_config(),
-            log_file, log_level, print_logs, systemd_mode
-        )
-
-        database.open(app_config.get_logging_config())
-
-        if create:
-            creator = Creator(database)
-            creator.create()
-        else:
-            mqtt.open(app_config.get_mqtt_config())
-            runner = Runner(database, mqtt)
-            runner.run()
-
-        # click.echo("systemd_mode: %s" % app_config.get_logging_config())
+        run_service(config_file, create, log_file, log_level, print_logs, systemd_mode)
 
     except KeyboardInterrupt:
         return 0
@@ -84,12 +56,34 @@ def _run_service(config_file, create, log_file, log_level, print_logs, systemd_m
         _logger.exception(ex)
         return 1
 
+
+def run_service(config_file, create, log_file, log_level, print_logs, systemd_mode):
+    """Logs MQTT messages to a Postgres database."""
+
+    creator = None  # type: Runner
+    runner = None  # type: Runner
+
+    try:
+        app_config = AppConfig(config_file)
+        AppLogging.configure(
+            app_config.get_logging_config(),
+            log_file, log_level, print_logs, systemd_mode
+        )
+
+        if create:
+            creator = SchemaCreator(app_config.get_database_config())
+            creator.connect()
+            creator.create_schema()
+        else:
+            runner = Runner(app_config)
+            runner.loop()
+
     finally:
-        if mqtt is not None:
-            mqtt.close()
-        if database is not None:
-            database.close()
+        if creator is not None:
+            creator.close()
+        if runner is not None:
+            runner.close()
 
 
 if __name__ == '__main__':
-    _run_service()
+    _main()

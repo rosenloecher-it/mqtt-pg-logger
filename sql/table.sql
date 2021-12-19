@@ -1,31 +1,33 @@
 -- The content of this file is parsed into commands by a quite simple algorithm. So please don't user ";" in comments
 
--- drop table journal;
 
-create table journal (
-    journal_id serial primary key,
+-- DROP TABLE JOURNAL;
 
-    message_id integer,
-    text varchar(1024),
-    data jsonb,
+CREATE TABLE journal (
+    journal_id SERIAL PRIMARY KEY,
 
-    qos integer,
-    retain integer,
-    topic varchar(256),
+    topic VARCHAR(256),
+    text VARCHAR(1024),
+    data JSONB,
 
-    time timestamp with time zone default current_timestamp
+    message_id INTEGER,
+    qos INTEGER,
+    retain INTEGER,
+
+    time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-comment on column journal.journal_id is 'Primary key';
-comment on column journal.message_id is 'Client message id (mid).';
-comment on column journal.text is 'Text payload';
-comment on column journal.data is 'JSON representation (of "text")';
-comment on column journal.qos is 'Message quality of service 0, 1 or 2.';
-comment on column journal.retain is 'If 1, the message is a retained message and not fresh (otherwise 0).';
-comment on column journal.topic is 'Topic that the message was published on.';
-comment on column journal.time is 'Time the item was inserted into database.';
 
--- insert into journal (message_num, payload, qos, retain, topic) values (1, 'payload', 1, 0, 'topic');
--- select * from journal;
+COMMENT ON COLUMN journal.journal_id is 'Primary key';
+COMMENT ON COLUMN journal.message_id is 'Client message id (mid).';
+COMMENT ON COLUMN journal.text is 'Text payload';
+COMMENT ON COLUMN journal.data is 'JSON representation (of "text")';
+COMMENT ON COLUMN journal.qos is 'Message quality of service 0, 1 or 2.';
+COMMENT ON COLUMN journal.retain is 'If 1, the message is a retained message and not fresh (otherwise 0).';
+COMMENT ON COLUMN journal.topic is 'Topic that the message was published on.';
+COMMENT ON COLUMN journal.time is 'Time the item was inserted into database.';
+
+-- INSERT INTO JOURNAL (message_id, topic, text, qos, retain) values (1, 'topic', '{"a": "json"}', 1, 0);
+-- SELECT * FROM journal;
 
 

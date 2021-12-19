@@ -17,6 +17,18 @@ class DatabaseUtils:
         return cls._parse_lines_into_commands(lines)
 
     @classmethod
+    def load_as_single_command(cls, file: str) -> str:
+        """Loads commands from a file"""
+
+        if not os.path.isfile(file):
+            raise FileNotFoundError("Script file ({}) not found".format(file))
+
+        with open(file) as f:
+            lines = f.readlines()
+
+        return "\n".join(lines)
+
+    @classmethod
     def split_commands(cls, text: str) -> List[str]:
         text = text.replace("\r", "\n")
         lines = text.split("\n")
