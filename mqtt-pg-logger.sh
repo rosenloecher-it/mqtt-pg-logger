@@ -21,5 +21,8 @@ if [ $RC -ne 0 ] ; then
 	exit 1
 fi
 
+
+export PYTHONPATH="$SCRIPT_DIR"
+
 python ./src/mqtt_pg_logger.py $@
 exit $?
