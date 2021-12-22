@@ -2,6 +2,5 @@ click == 8.0.3
 jsonschema == 4.1
 paho-mqtt == 1.5.0
 psycopg == 3.0.6
-# py-dateutil == 2.2
 pyyaml == 5.3
-# tzlocal == 2.0
+tzlocal == 2.0
