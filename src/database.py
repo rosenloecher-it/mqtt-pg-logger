@@ -63,13 +63,14 @@ class Database(abc.ABC):
     def __init__(self, config):
         # runtime properties
         self._connection = None
+        self._auto_commit = False
 
         # configuration
         self._connect_data = {
             "host": config[DatabaseConfKey.HOST],
             "port": config[DatabaseConfKey.PORT],
             "user": config[DatabaseConfKey.USER],
-            "pass": config.get(DatabaseConfKey.PASSWORD),
+            "password": config.get(DatabaseConfKey.PASSWORD),
             "dbname": config[DatabaseConfKey.DATABASE],
         }
 
@@ -95,7 +96,7 @@ class Database(abc.ABC):
             self._connection.close()
 
         try:
-            self._connection = psycopg.connect(**self._connect_data)
+            self._connection = psycopg.connect(**self._connect_data, autocommit=self._auto_commit)
 
             with self._connection.cursor() as cursor:
                 time_zone = self._timezone if self._timezone else self.get_default_time_zone_name()

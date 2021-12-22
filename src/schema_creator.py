@@ -14,6 +14,8 @@ class SchemaCreator(Database):
     def __init__(self, config):
         super().__init__(config)
 
+        self._auto_commit = True  # creating indices cannot run within a transaction
+
     def create_schema(self):
         if self._table_name != self.DEFAULT_TABLE_NAME:
             raise ValueError(
@@ -43,7 +45,7 @@ class SchemaCreator(Database):
         project_dir = os.path.dirname(file_path)  # go up one time
         return os.path.join(project_dir, "sql", script_name)
 
-    def _execute_commands(self, commands: List[str]):
+    def _execute_commands(self, commands: List[str], auto_commit=False):
         with self._connection.cursor() as cursor:
             for command in commands:
                 try:
