@@ -20,7 +20,6 @@ class MessageStore(Database):
         super().__init__(config)
 
         self._batch_size = max(config.get(DatabaseConfKey.BATCH_SIZE, self.DEFAULT_BATCH_SIZE), 10000)
-        self._wait_max_seconds = max(config.get(DatabaseConfKey.WAIT_MAX_SECONDS, self.DEFAULT_WAIT_MAX_SECONDS), 60)
         self._clean_up_after_days = config.get(DatabaseConfKey.CLEAN_UP_AFTER_DAYS, self.DEFAULT_CLEAN_UP_AFTER_DAYS)
 
         self._last_clean_up_time = self._now()
