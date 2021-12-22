@@ -1,6 +1,11 @@
 # mqtt-pg-logger
 
-common text
+Collects MQTT messages and stores them in a Postgres database.
+
+- Runs as Linux service.
+- Provides the message payload as standard VARCHAR text and additionally converts the payload into a JSONB column if compatible.
+- Clean up old messages after x days.
+
 
 ## Startup
 
@@ -57,7 +62,14 @@ Edit your `mqtt-pg-logger.yaml`. See comments there.
 ./mqtt-pg-logger.sh --help
 
 # prepare your own config file based on ./mqtt-pg-logger.yaml.sample
-./mqtt-pg-logger.sh -p -c ./mqtt-pg-logger.yaml
+
+# create database schema manually analog to ./scripts/*.sql or let the app do it
+./mqtt-pg-logger.sh --create --print-logs --systemd-mode --config-file ./mqtt-pg-logger.yaml
+
+# start the logger
+./mqtt-pg-logger.sh --print-logs --systemd-mode --config-file ./mqtt-pg-logger.yaml
+# abort with ctrl+c
+
 ```
 
 ## Register as systemd service

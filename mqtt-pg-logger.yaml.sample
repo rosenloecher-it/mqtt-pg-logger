@@ -4,12 +4,12 @@ logging:
     log_level:                  "info"  # debug, info, warning, error
 
 mqtt:
-    client_id:                  "mqtt-pg-logger"
+    client_id:                  "mqtt-pg-logger-1234"
     host:                       "<your_broker>"
     port:                       1883
     protocol:                   4  # 3==MQTTv31 (default), 4==MQTTv311, 5==default/MQTTv5,
-    subscriptions:              ["smarthome/#", "smarthome2/#"]
-    skip_subscription_regexes:  []
+    subscriptions:              ["smarthome/#", "smarthome2/#"]  # topics
+    skip_subscription_regexes:  []  # regex for topics
 
 database:
     host:                       "localhost"
@@ -17,5 +17,5 @@ database:
     user:                       "<your database user>"
     password:                   "<your database password>"
     database:                   "<your database name>"
-    # clean_up_after_days:      14
+    # clean_up_after_days:      14  # default: 14; disable == 0
     # table_name:               "journal"  # default: "journal"
