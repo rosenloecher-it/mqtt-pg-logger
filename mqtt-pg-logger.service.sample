@@ -1,21 +1,13 @@
-logging:
-    # "-p" (== --print) makes logging obsolet (espcically if you running a systemd service)
-    # log_file:                 "./__test__/mqtt-logs.log"
-    log_level:                  "info"  # debug, info, warning, error
+[Unit]
+Description=MQTT Postgres Logger
 
-mqtt:
-    client_id:                  "mqtt-pg-logger"
-    host:                       "<your_broker>"
-    port:                       1883
-    protocol:                   4  # 3==MQTTv31 (default), 4==MQTTv311, 5==default/MQTTv5,
-    subscriptions:              ["smarthome/#", "smarthome2/#"]
-    skip_subscription_regexes:  []
+[Service]
+Type=simple
+ExecStart=/opt/mqtt-pg-logger/mqtt-pg-logger.sh --systemd-mode --config-file /opt/mqtt-pg-logger/mqtt-pg-logger.yaml
+Restart=always
+RestartSec=60
+WorkingDirectory=/opt/mqtt-pg-logger
+User=<your service user>
 
-database:
-    host:                       "localhost"
-    port:                       5435
-    user:                       "<your database user>"
-    password:                   "<your database password>"
-    database:                   "<your database name>"
-    # clean_up_after_days:      14
-    # table_name:               "journal"  # default: "journal"
+[Install]
+WantedBy=multi-user.target
