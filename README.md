@@ -64,10 +64,10 @@ Edit your `mqtt-pg-logger.yaml`. See comments there.
 # prepare your own config file based on ./mqtt-pg-logger.yaml.sample
 
 # create database schema manually analog to ./scripts/*.sql or let the app do it
-./mqtt-pg-logger.sh --create --print-logs --systemd-mode --config-file ./mqtt-pg-logger.yaml
+./mqtt-pg-logger.sh --create --print-logs --config-file ./mqtt-pg-logger.yaml
 
 # start the logger
-./mqtt-pg-logger.sh --print-logs --systemd-mode --config-file ./mqtt-pg-logger.yaml
+./mqtt-pg-logger.sh --print-logs --config-file ./mqtt-pg-logger.yaml
 # abort with ctrl+c
 
 ```

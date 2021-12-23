@@ -23,19 +23,22 @@ class SchemaCreator(Database):
                 "execute the SQL scripts manually!".format(self._table_name, self.DEFAULT_TABLE_NAME)
             )
 
-        # TODO check if table exists
+        # if table exists, an error is thrown anyway, so no need for check explicitly.
 
         script = self.get_script_path("table.sql")
         commands = DatabaseUtils.load_commands(script)
         self._execute_commands(commands)
+        _logger.info("table and indices created.")
 
         script = self.get_script_path("convert.sql")
         command = DatabaseUtils.load_as_single_command(script)
         self._execute_commands([command])
+        _logger.info("json convert function created.")
 
         script = self.get_script_path("trigger.sql")
         command = DatabaseUtils.load_as_single_command(script)
         self._execute_commands([command])
+        _logger.info("json convert trigger created.")
 
         self._connection.commit()
 
