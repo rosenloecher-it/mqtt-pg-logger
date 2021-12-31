@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 from typing import List, Set
 
 import paho.mqtt.client as mqtt
@@ -18,17 +19,18 @@ class MqttListener(MqttClient):
         super().__init__(config)
 
         self._subscriptions = set()
-        self._skip_subscription_regexes = set()
-
+        self._skip_subscription_regexes = []
         self._messages = []  # type: List[Message]
 
-        subscriptions = config.get(MqttConfKey.SUBSCRIPTIONS)
+        skip_subscription_regexes = self.list_to_set(config.get(MqttConfKey.SKIP_SUBSCRIPTION_REGEXES))
+        for skip_subscription_regex in skip_subscription_regexes:
+            if skip_subscription_regex:
+                self._skip_subscription_regexes.append(re.compile(skip_subscription_regex))
 
-        with self._lock:
-            self._skip_subscription_regexes = self.list_to_set(config.get(MqttConfKey.SKIP_SUBSCRIPTION_REGEXES))
-            self._subscriptions = self.list_to_set(subscriptions)
-            if not self._subscriptions:
-                self._subscribed = True
+        subscriptions = config.get(MqttConfKey.SUBSCRIPTIONS)
+        self._subscriptions = self.list_to_set(subscriptions)
+        if not self._subscriptions:
+            self._subscribed = True
 
     def try_to_subscribe(self) -> bool:
         """wait for getting mqtt connect callback called"""
@@ -94,10 +96,18 @@ class MqttListener(MqttClient):
                 message.time = self._now()
                 _logger.debug('received mqtt message: "%s"', message)
 
-                with self._lock:
-                    # if self.store_retained or not message.retain:
-                    if message.topic not in self._skip_subscription_regexes:  # TODP
-                        self._messages.append(message)
+                if self._accept_topic(message.topic):
+                    self._messages.append(message)
 
         except Exception as ex:
             _logger.exception(ex)
+
+    def _accept_topic(self, topic):
+        append = True
+        for regex in self._skip_subscription_regexes:
+            if regex.match(topic):
+                append = False
+                _logger.debug('skipped topic: "%s"', topic)
+                break
+
+        return append

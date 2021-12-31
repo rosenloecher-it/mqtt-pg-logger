@@ -35,6 +35,17 @@ SUBSCRIPTION_JSONSCHEMA = {
 }
 
 
+SKIP_SUBSCRIPTION_JSONSCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "If this regex matches the topic the message is skipped.",
+        # "pattern": "[A-Za-z\/]*",  # no "#" at end
+    },
+}
+
+
 MQTT_JSONSCHEMA = {
     "type": "object",
     "properties": {
@@ -51,7 +62,7 @@ MQTT_JSONSCHEMA = {
         MqttConfKey.PASSWORD: {"type": "string"},
 
         MqttConfKey.SUBSCRIPTIONS: SUBSCRIPTION_JSONSCHEMA,
-        MqttConfKey.SKIP_SUBSCRIPTION_REGEXES: SUBSCRIPTION_JSONSCHEMA,
+        MqttConfKey.SKIP_SUBSCRIPTION_REGEXES: SKIP_SUBSCRIPTION_JSONSCHEMA,
         MqttConfKey.TEST_SUBSCRIPTION_BASE: {
             "type": "string",
             "minLength": 1,
