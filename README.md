@@ -1,36 +1,19 @@
 # mqtt-pg-logger
 
-Collects MQTT messages and stores them in a Postgres database.
+Collects [MQTT](https://en.wikipedia.org/wiki/MQTT) messages and stores them in a Postgres database.
 
 - Runs as Linux service.
-- Provides the message payload as standard VARCHAR text and additionally converts the payload into a JSONB column if compatible.
-- Clean up old messages after x days.
+- Provides the message payload as standard VARCHAR text and additionally converts the payload into a JSONB column if compatible. (See: [trigger.sql](./sql/trigger.sql) and [convert.sql](./sql/convert.sql))
+- Clean up old messages (after x days).
 
 
 ## Startup
-
-### Test working MQTT broker (here Mosquitto)
-```bash
-sudo apt-get install mosquitto-clients
-
-# preprare credentials
-SERVER="<your server>"
-
-# start listener
-mosquitto_sub -h $SERVER -p 1883 -i "client_sub" -d -t smarthome/#
-
-# send single message
-mosquitto_pub -h $SERVER -p 1883 -i "client_pub" -d -t smarthome/test -m "test_$(date)"
-
-# just as info: clear retained messages
-mosquitto_pub -h $SERVER -p 1883 -i "client_pub" -d -t smarthome/test -n -r -d
-```
 
 ### Prepare python environment
 ```bash
 cd /opt
 sudo mkdir mqtt-pg-logger
-sudo chown pi:pi mqtt-pg-logger  # type in your user
+sudo chown <user>:<user> mqtt-pg-logger  # type in your user
 git clone https://github.com/rosenloecher-it/mqtt-pg-logger mqtt-pg-logger
 
 cd mqtt-pg-logger
@@ -51,6 +34,9 @@ pip install -r requirements.txt
 ```bash
 # cd ... goto project dir
 cp ./mqtt-pg-logger.yaml.sample ./mqtt-pg-logger.yaml
+
+# security concerns: make sure, no one can read the stored passwords
+chmod 600 ./mqtt-pg-logger.yaml
 ```
 
 Edit your `mqtt-pg-logger.yaml`. See comments there.
@@ -95,6 +81,41 @@ journalctl -u mqtt-pg-logger --no-pager --since "5 minutes ago"
 
 # enable autostart at boot time
 sudo systemctl enable mqtt-pg-logger.service
+```
+
+## Additional infos
+
+## Database infos
+
+Consider running a `VACUUM ANALYZE` on your Postgres database on a periodic base (CRON).  
+This will [reclaim storage occupied by dead tuples](https://postgrespro.com/docs/postgresql/13/sql-vacuum).
+
+### MQTT broker related infos
+
+If no messages get logged check your broker. 
+```bash
+sudo apt-get install mosquitto-clients
+
+# preprare credentials
+SERVER="<your server>"
+
+# start listener
+mosquitto_sub -h $SERVER -d -t smarthome/#
+
+# send single message
+mosquitto_pub -h $SERVER -d -t smarthome/test -m "test_$(date)"
+
+# just as info: clear retained messages
+mosquitto_pub -h $SERVER -d -t smarthome/test -n -r -d
+```
+
+Not that retained messages get logged again after a restart of the service.
+And especially stale messages of meanwhile unused topic gets logged again and again.
+Therefore, consider clearing all retained messages on a periodic base (CRON). 
+```bash
+SERVER="<your server>"
+BASE_TOPIC="test/#"  # or "#"
+mosquitto_sub -h "$SERVER" -t "$BASE_TOPIC" -F "%t" --retained-only | while read line; do mosquitto_pub -h "$SERVER" -t "${line% *}" -r -n; done
 ```
 
 ## Maintainer & License
