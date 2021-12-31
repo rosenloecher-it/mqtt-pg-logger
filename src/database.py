@@ -1,6 +1,7 @@
 import abc
 import datetime
 import logging
+from typing import Optional
 
 import psycopg
 from tzlocal import get_localzone
@@ -48,7 +49,7 @@ DATABASE_JSONSCHEMA = {
         },
     },
     "additionalProperties": False,
-    "required": [DatabaseConfKey.HOST, DatabaseConfKey.PORT, DatabaseConfKey.PORT, DatabaseConfKey.DATABASE],
+    "required": [DatabaseConfKey.HOST, DatabaseConfKey.PORT, DatabaseConfKey.DATABASE],
 }
 
 
@@ -64,6 +65,7 @@ class Database(abc.ABC):
         # runtime properties
         self._connection = None
         self._auto_commit = False
+        self._last_connect_time = None  # type: Optional[datetime.datetime]
 
         # configuration
         self._connect_data = {

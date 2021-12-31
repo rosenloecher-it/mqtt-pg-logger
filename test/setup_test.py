@@ -3,7 +3,7 @@ import logging
 import os
 import pathlib
 import sys
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import psycopg
 import testing.postgresql
@@ -28,7 +28,7 @@ class SetupTest:
     DATABASE_DIR = os.path.join(TEST_DIR, "database")
 
     _logging_inited = False
-    _postgresql = None  # type: testing.postgresql.Postgresql
+    _postgresql = None  # type: Optional[testing.postgresql.Postgresql]
 
     @classmethod
     def init_logging(cls):
@@ -80,24 +80,24 @@ class SetupTest:
         return cls.ensure_clean_dir(cls.get_database_dir())
 
     @classmethod
-    def ensure_dir(cls, dir) -> str:
-        exists = os.path.exists(dir)
+    def ensure_dir(cls, dirpath) -> str:
+        exists = os.path.exists(dirpath)
 
-        if exists and not os.path.isdir(dir):
-            raise NotADirectoryError(dir)
+        if exists and not os.path.isdir(dirpath):
+            raise NotADirectoryError(dirpath)
         if not exists:
-            os.makedirs(dir)
+            os.makedirs(dirpath)
 
-        return dir
+        return dirpath
 
     @classmethod
-    def ensure_clean_dir(cls, dir) -> str:
-        if not os.path.exists(dir):
-            cls.ensure_dir(dir)
+    def ensure_clean_dir(cls, dirpath) -> str:
+        if not os.path.exists(dirpath):
+            cls.ensure_dir(dirpath)
         else:
-            cls.clean_dir_recursively(dir)
+            cls.clean_dir_recursively(dirpath)
 
-        return dir
+        return dirpath
 
     @classmethod
     def clean_dir_recursively(cls, path_in):

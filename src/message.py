@@ -13,7 +13,7 @@ class Message:
     # data is extracted in database
 
     qos = attr.ib(default=None)  # type: int
-    retain = attr.ib(default=None)  # type: bool
+    retain = attr.ib(default=None)  # type: int
 
     time = attr.ib(default=False)  # type: datetime.datetime
 

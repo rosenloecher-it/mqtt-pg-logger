@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import logging
+from typing import Optional
 
 import click
 
 from src.app_config import AppConfig
 from src.app_logging import AppLogging, LOGGING_CHOICES, LOGGING_DEFAULT_LOG_LEVEL
-from src.schema_creator import SchemaCreator
 from src.runner import Runner
+from src.schema_creator import SchemaCreator
 
 
 _logger = logging.getLogger(__name__)
@@ -60,8 +61,8 @@ def _main(config_file, create, log_file, log_level, print_logs, systemd_mode):
 def run_service(config_file, create, log_file, log_level, print_logs, systemd_mode):
     """Logs MQTT messages to a Postgres database."""
 
-    creator = None  # type: Runner
-    runner = None  # type: Runner
+    creator = None  # type: Optional[SchemaCreator]
+    runner = None  # type: Optional[Runner]
 
     try:
         app_config = AppConfig(config_file)

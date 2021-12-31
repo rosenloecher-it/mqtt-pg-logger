@@ -48,7 +48,7 @@ class SchemaCreator(Database):
         project_dir = os.path.dirname(file_path)  # go up one time
         return os.path.join(project_dir, "sql", script_name)
 
-    def _execute_commands(self, commands: List[str], auto_commit=False):
+    def _execute_commands(self, commands: List[str]):
         with self._connection.cursor() as cursor:
             for command in commands:
                 try:

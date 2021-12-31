@@ -2,24 +2,25 @@ import copy
 import threading
 import time
 import unittest
+from typing import Optional
 from unittest import mock
 
 import attr
 import yaml
 
 from src.database import DatabaseConfKey
+from src.lifecycle_control import StatusNotification, LifecycleControl
 from src.mqtt_listener import MqttConfKey
 from src.mqtt_pg_logger import run_service
+from test.mocked_lifecycle_control import MockedLifecycleControl
 from test.mqtt_publisher import MqttPublisher
 from test.setup_test import SetupTest
-from test.mocked_lifecycle_control import MockedLifecycleControl
-from src.lifecycle_control import StatusNotification, LifecycleControl
 
 
 @attr.s
 class Subscription:
     topic = attr.ib()  # type: str
-    subscription = attr.ib()  # type: str
+    subscription = attr.ib()  # type: Optional[str]
     skip = attr.ib()  # type: bool
 
 

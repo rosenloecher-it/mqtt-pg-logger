@@ -25,7 +25,7 @@ class StatusNotification(Enum):
         return self.value
 
 
-class LifecycleControl():
+class LifecycleControl:
 
     _instance = None  # type: LifecycleControl  # vs. IntegrationControl
     _lock = threading.Lock()
@@ -65,12 +65,12 @@ class LifecycleControl():
         instance = cls.get_instance()
         return instance._should_proceed()
 
-    def _shutdown(self) -> bool:
+    def _shutdown(self):
         with LifecycleControl._lock:
             self._proceed = False
 
     @classmethod
-    def shutdown(cls) -> bool:
+    def shutdown(cls):
         instance = cls.get_instance()
         instance._shutdown()
 
