@@ -43,9 +43,9 @@ class Runner:
                     self._store.queue(messages)
                     busy = True
 
-                if len(messages) and there_has_been_messages_to_notify:
+                if len(messages) == 0 and there_has_been_messages_to_notify:
                     there_has_been_messages_to_notify = False
-                    LifecycleControl.notify(StatusNotification.RUNNER_QUEUE_EMPTIED)
+                    LifecycleControl.notify(StatusNotification.RUNNER_QUEUE_EMPTIED)  # test related
 
                 time.sleep(time_step / 100 if busy else time_step)
 

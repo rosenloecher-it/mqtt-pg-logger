@@ -23,7 +23,6 @@ class MqttListener(MqttClient):
         self._messages = []  # type: List[Message]
         self._received_message_count = 0
         self._skipped_message_count = 0
-        self._log_step = 10 if _logger.isEnabledFor(logging.DEBUG) else 100
 
         skip_subscription_regexes = self.list_to_set(config.get(MqttConfKey.SKIP_SUBSCRIPTION_REGEXES))
         for skip_subscription_regex in skip_subscription_regexes:
@@ -68,28 +67,18 @@ class MqttListener(MqttClient):
 
     def get_messages(self) -> List[Message]:
         with self._lock:
+            if not self._is_connected:
+                error_info = " " + self._disconnected_error_info if self._disconnected_error_info else ""
+                raise RuntimeError("MQTT is not connected!{}".format(error_info))
             messages = self._messages  # type: List[Message]
             self._messages = []
         return messages
 
     def _on_connect(self, mqtt_client, userdata, flags, rc):
-        """MQTT callback is called when client connects to MQTT server."""
-        if rc == 0:
-            with self._lock:
-                self._is_connected = True
-            LifecycleControl.notify(StatusNotification.MQTT_LISTENER_CONNECTED)
-            _logger.info("successfully connected to MQTT: flags=%s, rc=%s", flags, rc)
-        else:
-            _logger.error("connect to MQTT failed: flags=%s, rc=%s", flags, rc)
+        super()._on_connect(mqtt_client, userdata, flags, rc)
 
-    def _on_disconnect(self, mqtt_client, userdata, rc):
-        """MQTT callback for when the client disconnects from the MQTT server."""
-        with self._lock:
-            self._is_connected = False
         if rc == 0:
-            _logger.info("disconnected from MQTT: rc=%s", rc)
-        else:
-            _logger.error("unexpectedly disconnected from MQTT broker: rc=%s", rc)
+            LifecycleControl.notify(StatusNotification.MQTT_LISTENER_CONNECTED)
 
     def _on_message(self, mqtt_client, userdata, mqtt_message: mqtt.MQTTMessage):
         """MQTT callback when a message is received from MQTT server"""
@@ -110,9 +99,8 @@ class MqttListener(MqttClient):
 
                     skipped_message_count = self._skipped_message_count
                     received_message_count = self._received_message_count
-                    log_step = self._log_step
 
-                if received_message_count % log_step == 0:
+                if received_message_count % 100 == 0:
                     if skipped_message_count > 0:
                         _logger.info("status: received=%d; skipped=%d", received_message_count, skipped_message_count)
                     else:
@@ -121,13 +109,13 @@ class MqttListener(MqttClient):
         except Exception as ex:
             _logger.exception(ex)
 
-    def _accept_topic(self, topic):
-        append = True
+    def _accept_topic(self, topic) -> bool:
+        accept = True
         # `self._skip_subscription_regexes` only used within threaded context, so no use of `self._lock`!
         for regex in self._skip_subscription_regexes:
             if regex.match(topic):
-                append = False
+                accept = False
                 _logger.debug('skipped topic: "%s"', topic)
                 break
 
-        return append
+        return accept

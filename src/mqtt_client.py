@@ -2,9 +2,11 @@ import abc
 import datetime
 import logging
 import threading
+from typing import Optional
 
 import paho.mqtt.client as mqtt
 from tzlocal import get_localzone
+
 
 _logger = logging.getLogger(__name__)
 
@@ -91,6 +93,7 @@ class MqttClient:
 
         self._client = None
         self._is_connected = False
+        self._disconnected_error_info = None  # type: Optional[str]
         self._subscribed = False
         self._shutdown = False
 
@@ -135,10 +138,15 @@ class MqttClient:
 
         self._client.reconnect_delay_set()
 
+    @property
+    def is_connected(self):
+        with self._lock:
+            return self._is_connected
+
     def connect(self):
         self._client.connect_async(self._host, port=self._port, keepalive=self._keepalive)
         self._client.loop_start()
-        _logger.debug(f"{self.__class__.__name__} connecting.")
+        _logger.debug("%s is connecting.", self.__class__.__name__)
 
     def close(self):
         self._shutdown = True
@@ -147,18 +155,37 @@ class MqttClient:
             self._client.disconnect()
             self._client.loop_forever()  # will block until disconnect complete
             self._client = None
-            _logger.debug(f"{self.__class__.__name__} closed.")
+            _logger.debug("%s was closed.", self.__class__.__name__)
 
     @abc.abstractmethod
     def _get_default_client_id(self):
-        # TODO host + process + random number
         raise NotImplementedError()
 
     def _on_connect(self, mqtt_client, userdata, flags, rc):
         """MQTT callback is called when client connects to MQTT server."""
+        if rc == 0:
+            with self._lock:
+                self._is_connected = True
+            _logger.debug("%s was connected.", self.__class__.__name__)
+        else:
+            _logger.error("%s failed to connect: %s (#%s)", self.__class__.__name__, mqtt.error_string(rc), rc)
 
     def _on_disconnect(self, mqtt_client, userdata, rc):
         """MQTT callback for when the client disconnects from the MQTT server."""
+
+        disconnected_error_info = None
+        if rc != 0:
+            disconnected_error_info = "{} (#{})".format(mqtt.error_string(rc), rc)
+
+        with self._lock:
+            self._is_connected = False
+            if rc != 0:
+                self._disconnected_error_info = disconnected_error_info
+
+        if rc == 0:
+            _logger.debug("%s was disconnected.", self.__class__.__name__)
+        else:
+            _logger.error("%s was unexpectedly disconnected: %s", self.__class__.__name__, disconnected_error_info or "???")
 
     def _on_message(self, mqtt_client, userdata, mqtt_message: mqtt.MQTTMessage):
         """MQTT callback when a message is received from MQTT server"""
