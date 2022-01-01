@@ -130,6 +130,7 @@ class Database(abc.ABC):
             local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
         return str(local_timezone)
 
-    def _now(self) -> datetime:
+    @classmethod
+    def _now(cls) -> datetime:
         """overwritable datetime.now for testing"""
         return datetime.datetime.now(tz=get_localzone())

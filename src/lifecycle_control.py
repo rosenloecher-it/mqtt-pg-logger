@@ -39,7 +39,7 @@ class LifecycleInstance:
 
     def _shutdown_signaled(self, sig, _frame):
         _logger.info("shutdown signaled (%s)", sig)
-        self._shutdown()
+        self.shutdown()
 
     def should_proceed(self) -> bool:
         with self._lock:
@@ -58,6 +58,7 @@ class LifecycleInstance:
         """Overwritten in test by a mock"""
         pass
 
+    # noinspection
     def sleep(self, seconds: float) -> float:
         time.sleep(seconds)
         return seconds

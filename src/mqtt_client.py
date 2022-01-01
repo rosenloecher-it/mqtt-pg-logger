@@ -174,7 +174,7 @@ class MqttClient:
         else:
             _logger.error("%s failed to connect: %s (#%s)", self.__class__.__name__, mqtt.error_string(rc), rc)
 
-    def _on_disconnect(self, mqtt_client, userdata, rc):
+    def _on_disconnect(self, _mqtt_client, _userdata, rc):
         """MQTT callback for when the client disconnects from the MQTT server."""
 
         disconnected_error_info = None
@@ -197,5 +197,6 @@ class MqttClient:
     def _on_publish(self, mqtt_client, userdata, mid):
         """MQTT callback is invoked when message was successfully sent to the MQTT server."""
 
-    def _now(self) -> datetime:
+    @classmethod
+    def _now(cls) -> datetime:
         return datetime.datetime.now(tz=get_localzone())

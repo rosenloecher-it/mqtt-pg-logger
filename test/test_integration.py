@@ -12,7 +12,7 @@ from src.database import DatabaseConfKey
 from src.lifecycle_control import StatusNotification, LifecycleControl
 from src.mqtt_listener import MqttConfKey
 from src.mqtt_pg_logger import run_service
-from test.mocked_lifecycle_control import MockedLifecycleControl
+from test.mocked_lifecycle_control import MockedLifecycleControl, MockedLifecycleInstance
 from test.mqtt_publisher import MqttPublisher
 from test.setup_test import SetupTest
 
@@ -62,7 +62,7 @@ class TestIntegration(unittest.TestCase):
         self.mqtt_publisher = MqttPublisher(publisher_config_data)
         self.mqtt_publisher.connect()
 
-        self.mocked_lifecycle = MockedLifecycleControl.get_instance()
+        self.mocked_lifecycle = MockedLifecycleControl.get_instance()  # type: MockedLifecycleInstance
         self.mocked_lifecycle.reset()
 
     def tearDown(self):

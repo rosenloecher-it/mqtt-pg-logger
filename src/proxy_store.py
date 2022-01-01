@@ -46,16 +46,6 @@ class ProxyStore(threading.Thread):
 
         super().start()
 
-    def __enter__(self):
-        self.connect()
-        return self
-
-    def __exit__(self, *args):
-        self.close()
-
-    def __del__(self):
-        self.close()
-
     def close(self):
         with self._lock:
             self._closing = True
@@ -203,6 +193,7 @@ class ProxyStore(threading.Thread):
 
         return False
 
-    def _now(self) -> datetime:
+    @classmethod
+    def _now(cls) -> datetime:
         """overwritable datetime.now for testing"""
         return datetime.datetime.now(tz=get_localzone())

@@ -139,7 +139,7 @@ class SetupTest:
     def close_database(cls, shutdown=False):
         if cls._postgresql:
             if shutdown:
-                cls.postgresql.stop()
+                cls._postgresql.stop()
                 cls._postgresql = None
 
     @classmethod

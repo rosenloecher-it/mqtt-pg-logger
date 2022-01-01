@@ -74,7 +74,7 @@ class TestMqttListenerConnectionErrors(unittest.TestCase):
 
     @mock.patch('paho.mqtt.client.Client')
     @mock.patch.object(LifecycleControl, "_create_instance", lambda: MagicMock())
-    def test_subscribe_unexpected_disconnect(self, _):
+    def test_subscribe_unexpected_disconnect(self, _mock_mqtt_client):
         listener = self.create_listener()
         listener._client.subscribe.return_value = (0, "dummy")
 
@@ -89,7 +89,7 @@ class TestMqttListenerConnectionErrors(unittest.TestCase):
 
     @mock.patch('paho.mqtt.client.Client')
     @mock.patch.object(LifecycleControl, "_create_instance", lambda: MagicMock())
-    def test_subscribe_failure(self, mock_mqtt_client):
+    def test_subscribe_failure(self, _mock_mqtt_client):
         listener = self.create_listener()
         listener._client.subscribe.return_value = (7, "dummy")
 
@@ -100,7 +100,7 @@ class TestMqttListenerConnectionErrors(unittest.TestCase):
 
     @mock.patch('paho.mqtt.client.Client')
     @mock.patch.object(LifecycleControl, "_create_instance", lambda: MagicMock())
-    def test_subscribe_failure2(self, mock_mqtt_client):
+    def test_subscribe_failure2(self, _mock_mqtt_client):
         listener = self.create_listener()
         listener._client.subscribe.return_value = (7, "dummy")
 

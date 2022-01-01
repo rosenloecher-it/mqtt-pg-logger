@@ -23,7 +23,6 @@ class MockedLifecycleInstance(LifecycleInstance):
     def clear_notifications(self):
         with self._lock:
             self._set.clear()
-            self._shutdown = False
 
     def has(self, status: StatusNotification) -> bool:
         with self._lock:
@@ -69,7 +68,7 @@ class MockedLifecycleControl(LifecycleControl):
         return MockedLifecycleInstance()
 
     @classmethod
-    def get_instance(cls):
+    def get_instance(cls) -> MockedLifecycleInstance:
         if not MockedLifecycleControl._instance:
             with MockedLifecycleControl._creation_lock:
                 # another thread could have created the instance before we acquired the lock.
