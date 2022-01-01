@@ -62,13 +62,14 @@ class TestIntegration(unittest.TestCase):
         self.mqtt_publisher = MqttPublisher(publisher_config_data)
         self.mqtt_publisher.connect()
 
-        MockedLifecycleControl.reset()
+        self.mocked_lifecycle = MockedLifecycleControl.get_instance()
+        self.mocked_lifecycle.reset()
 
     def tearDown(self):
         self.mqtt_publisher.close()
 
         if self.service_thread:
-            MockedLifecycleControl.shutdown()
+            self.mocked_lifecycle.shutdown()
 
             try:
                 while self.service_thread.is_alive():
@@ -108,13 +109,13 @@ class TestIntegration(unittest.TestCase):
             try:
                 run_service(**kwargs)
             except Exception as ex:
-                MockedLifecycleControl.set_exception(ex)
+                self.mocked_lifecycle.set_exception(ex)
                 raise
 
         self.service_thread = threading.Thread(target=run_service_locally, daemon=True)
         self.service_thread.start()
 
-    @mock.patch.object(LifecycleControl, "_create_instance", MockedLifecycleControl._create_instance)
+    @mock.patch.object(LifecycleControl, "get_instance", MockedLifecycleControl.get_instance)
     def test_full_integration(self):
         self.run_service_threaded()
 
@@ -122,7 +123,7 @@ class TestIntegration(unittest.TestCase):
             StatusNotification.MESSAGE_STORE_CONNECTED, StatusNotification.MQTT_LISTENER_CONNECTED,
             StatusNotification.MQTT_LISTENER_SUBSCRIBED, StatusNotification.MQTT_PUBLISHER_CONNECTED
         ]
-        MockedLifecycleControl.wait_for_notifications(notifications, 5, "run up")
+        self.mocked_lifecycle.wait_for_notifications(notifications, 5, "run up")
 
         sent_messages = []
         unique_id = 0
@@ -140,13 +141,13 @@ class TestIntegration(unittest.TestCase):
                     sent_messages.append(message)
 
         notifications = [StatusNotification.RUNNER_QUEUE_EMPTIED, StatusNotification.MESSAGE_STORE_STORED]
-        MockedLifecycleControl.wait_for_notifications(notifications, 5, "wait for queue emptied")
+        self.mocked_lifecycle.wait_for_notifications(notifications, 5, "wait for queue emptied")
         time.sleep(3)  # 1s via DatabaseConfKey.WAIT_MAX_SECONDS
 
         self.mqtt_publisher.close()
-        MockedLifecycleControl.shutdown()
+        self.mocked_lifecycle.shutdown()
         notifications = [StatusNotification.MESSAGE_STORE_CLOSED]
-        MockedLifecycleControl.wait_for_notifications(notifications, 5, "shutdown")
+        self.mocked_lifecycle.wait_for_notifications(notifications, 5, "shutdown")
 
         fetched_rows = SetupTest.query_all("select * from journal")
         self.assertEqual(len(fetched_rows), len(sent_messages))

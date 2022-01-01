@@ -26,12 +26,10 @@ class StatusNotification(Enum):
         return self.value
 
 
-class LifecycleControl:
-
-    _instance = None  # type: LifecycleControl  # vs. IntegrationControl
-    _lock = threading.Lock()
+class LifecycleInstance:
 
     def __init__(self):
+        self._lock = threading.Lock()
         self._proceed = True
 
         if threading.current_thread() is threading.main_thread():
@@ -39,61 +37,68 @@ class LifecycleControl:
             signal.signal(signal.SIGINT, self._shutdown_signaled)
             signal.signal(signal.SIGTERM, self._shutdown_signaled)
 
-    @classmethod
-    def _create_instance(cls):
-        return LifecycleControl()
+    def _shutdown_signaled(self, sig, _frame):
+        _logger.info("shutdown signaled (%s)", sig)
+        self._shutdown()
+
+    def should_proceed(self) -> bool:
+        with self._lock:
+            return self._proceed
+
+    def shutdown(self):
+        with self._lock:
+            self._proceed = False
+
+    def reset(self):
+        """Assure that the class gets instantiated before the threads starts"""
+        with self._lock:
+            self._proceed = True
+
+    def notify(self, status: StatusNotification):
+        """Overwritten in test by a mock"""
+        pass
+
+    def sleep(self, seconds: float) -> float:
+        time.sleep(seconds)
+        return seconds
+
+
+class LifecycleControl:
+
+    _instance = None  # type: LifecycleInstance  # vs. MockedLifecycleInstance
+    _creation_lock = threading.Lock()
 
     @classmethod
-    def get_instance(cls):
+    def _create_instance(cls) -> LifecycleInstance:
+        return LifecycleInstance()
+
+    @classmethod
+    def get_instance(cls) -> LifecycleInstance:
         if not LifecycleControl._instance:
-            with LifecycleControl._lock:
+            with LifecycleControl._creation_lock:
                 # another thread could have created the instance before we acquired the lock.
                 # So check that the instance is still nonexistent.
                 if not LifecycleControl._instance:
                     LifecycleControl._instance = cls._create_instance()
         return LifecycleControl._instance
 
-    def _shutdown_signaled(self, sig, _frame):
-        _logger.info("shutdown signaled (%s)", sig)
-        self._shutdown()
-
-    def _should_proceed(self):
-        with LifecycleControl._lock:
-            return self._proceed
-
     @classmethod
     def should_proceed(cls) -> bool:
-        instance = cls.get_instance()
-        return instance._should_proceed()
-
-    def _shutdown(self):
-        with LifecycleControl._lock:
-            self._proceed = False
+        return cls.get_instance().should_proceed()
 
     @classmethod
     def shutdown(cls):
-        instance = cls.get_instance()
-        instance._shutdown()
-
-    def _reset(self):
-        with LifecycleControl._lock:
-            self._proceed = True
+        cls.get_instance().shutdown()
 
     @classmethod
     def reset(cls):
         """Assure that the class gets instantiated before the threads starts"""
-        instance = cls.get_instance()
-        instance._reset()
-
-    def _notify(self, status: StatusNotification):
-        """Overwritten in test by a mock"""
-        pass
+        cls.get_instance().reset()
 
     @classmethod
     def notify(cls, status: StatusNotification):
-        instance = cls.get_instance()
-        instance._notify(status)
+        cls.get_instance().notify(status)
 
-    def sleep(self, milliseconds):
-        time.sleep(milliseconds)
-        return milliseconds
+    @classmethod
+    def sleep(cls, seconds: float) -> float:
+        return cls.get_instance().sleep(seconds)
