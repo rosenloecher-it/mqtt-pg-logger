@@ -22,16 +22,7 @@ class Runner:
     def loop(self):
         """endless loop"""
         time_step = 0.05
-        time_counter = 0
         there_has_been_messages_to_notify = False
-
-        while LifecycleControl.should_proceed():
-            if self._mqtt.try_to_subscribe():
-                break
-            time.sleep(time_step)
-            time_counter += time_step
-            if time_counter > 15:
-                raise RuntimeError("couldn't subscribe to MQTT topics... no connection?!")
 
         try:
             while LifecycleControl.should_proceed():

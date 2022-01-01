@@ -77,6 +77,10 @@ MQTT_JSONSCHEMA = {
 }
 
 
+class MqttException(Exception):
+    pass
+
+
 class MqttClient:
 
     DEFAULT_KEEPALIVE = 60

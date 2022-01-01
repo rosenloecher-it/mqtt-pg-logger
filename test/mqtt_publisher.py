@@ -2,8 +2,7 @@ import logging
 import random
 
 from src.lifecycle_control import LifecycleControl, StatusNotification
-from src.mqtt_client import MqttClient
-
+from src.mqtt_client import MqttClient, MqttException
 
 _logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ class MqttPublisher(MqttClient):
                 return
 
             if not self._is_connected:
-                raise RuntimeError(self._disconnected_error_info or "MQTT is not connected!")
+                raise MqttException(self._disconnected_error_info or "MQTT is not connected!")
 
             return self._client.publish(
                 topic=topic,

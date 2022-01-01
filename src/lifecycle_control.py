@@ -1,6 +1,7 @@
 import logging
 import signal
 import threading
+import time
 from enum import Enum
 
 
@@ -92,3 +93,7 @@ class LifecycleControl:
     def notify(cls, status: StatusNotification):
         instance = cls.get_instance()
         instance._notify(status)
+
+    def sleep(self, milliseconds):
+        time.sleep(milliseconds)
+        return milliseconds

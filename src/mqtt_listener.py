@@ -7,8 +7,7 @@ import paho.mqtt.client as mqtt
 
 from src.lifecycle_control import LifecycleControl, StatusNotification
 from src.message import Message
-from src.mqtt_client import MqttConfKey, MqttClient
-
+from src.mqtt_client import MqttConfKey, MqttClient, MqttException
 
 _logger = logging.getLogger(__name__)
 
@@ -34,10 +33,22 @@ class MqttListener(MqttClient):
         if not self._subscriptions:
             self._subscribed = True
 
-    def try_to_subscribe(self) -> bool:
-        """wait for getting mqtt connect callback called"""
+    def connect(self):
+        super().connect()
 
-        if not self._shutdown and not self._subscribed and self._is_connected:
+        time_step = 0.05
+        time_counter = 0
+
+        while LifecycleControl.should_proceed() and not self._shutdown:
+            if self._try_to_subscribe():
+                break
+            time_counter += LifecycleControl.get_instance().sleep(time_step)
+            if time_counter > 15:
+                raise MqttException("couldn't subscribe to MQTT topics... no connection?!")
+
+    def _try_to_subscribe(self) -> bool:
+        """wait for getting mqtt connect callback called"""
+        if not self._subscribed and self._is_connected:
             with self._lock:
                 channels = [c for c in self._subscriptions]
             if channels:
@@ -45,12 +56,12 @@ class MqttListener(MqttClient):
                 subscriptions = [(s, subs_qos) for s in channels]
                 result, dummy = self._client.subscribe(subscriptions)
                 if result != mqtt.MQTT_ERR_SUCCESS:
-                    text = "could not subscripte to mqtt #{} ({})".format(result, subscriptions)
-                    raise RuntimeError(text)
+                    error_info = "{} (#{})".format(mqtt.error_string(result), result)
+                    raise MqttException(f"could not subscribe to MQTT topics): {error_info}; topics: {channels}")
 
                 self._subscribed = True
                 LifecycleControl.notify(StatusNotification.MQTT_LISTENER_SUBSCRIBED)
-                _logger.info("subscripted to MQTT channels (%s)", channels)
+                _logger.info("subscribed to MQTT topics (%s)", channels)
 
         return self._subscribed
 
@@ -69,7 +80,7 @@ class MqttListener(MqttClient):
         with self._lock:
             if not self._is_connected:
                 error_info = " " + self._disconnected_error_info if self._disconnected_error_info else ""
-                raise RuntimeError("MQTT is not connected!{}".format(error_info))
+                raise MqttException("cannot read messages from a disconnected MQTT listener!{}".format(error_info))
             messages = self._messages  # type: List[Message]
             self._messages = []
         return messages
