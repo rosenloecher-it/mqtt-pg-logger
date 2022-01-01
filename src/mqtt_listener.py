@@ -21,6 +21,9 @@ class MqttListener(MqttClient):
         self._subscriptions = set()
         self._skip_subscription_regexes = []
         self._messages = []  # type: List[Message]
+        self._received_message_count = 0
+        self._skipped_message_count = 0
+        self._log_step = 10 if _logger.isEnabledFor(logging.DEBUG) else 100
 
         skip_subscription_regexes = self.list_to_set(config.get(MqttConfKey.SKIP_SUBSCRIPTION_REGEXES))
         for skip_subscription_regex in skip_subscription_regexes:
@@ -94,16 +97,33 @@ class MqttListener(MqttClient):
             if mqtt_message is not None:
                 message = Message.create(mqtt_message)
                 message.time = self._now()
-                _logger.debug('received mqtt message: "%s"', message)
+                _logger.debug("message received: %s", message)
 
-                if self._accept_topic(message.topic):
-                    self._messages.append(message)
+                accept_message = self._accept_topic(message.topic)
+
+                with self._lock:
+                    if accept_message:
+                        self._messages.append(message)
+                    else:
+                        self._skipped_message_count += 1
+                    self._received_message_count += 1
+
+                    skipped_message_count = self._skipped_message_count
+                    received_message_count = self._received_message_count
+                    log_step = self._log_step
+
+                if received_message_count % log_step == 0:
+                    if skipped_message_count > 0:
+                        _logger.info("status: received=%d; skipped=%d", received_message_count, skipped_message_count)
+                    else:
+                        _logger.info("status: received=%d", received_message_count)
 
         except Exception as ex:
             _logger.exception(ex)
 
     def _accept_topic(self, topic):
         append = True
+        # `self._skip_subscription_regexes` only used within threaded context, so no use of `self._lock`!
         for regex in self._skip_subscription_regexes:
             if regex.match(topic):
                 append = False

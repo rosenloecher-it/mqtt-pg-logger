@@ -5,7 +5,7 @@ from typing import Optional
 import click
 
 from src.app_config import AppConfig
-from src.app_logging import AppLogging, LOGGING_CHOICES, LOGGING_DEFAULT_LOG_LEVEL
+from src.app_logging import AppLogging, LOGGING_CHOICES
 from src.runner import Runner
 from src.schema_creator import SchemaCreator
 
@@ -32,7 +32,6 @@ _logger = logging.getLogger(__name__)
 )
 @click.option(
     "--log-level",
-    default=LOGGING_DEFAULT_LOG_LEVEL,
     help="Log level",
     type=click.Choice(LOGGING_CHOICES, case_sensitive=False),
 )
