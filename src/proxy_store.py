@@ -74,13 +74,13 @@ class ProxyStore(threading.Thread):
 
             for message in messages:
                 if len(self._messages) > self.QUEUE_LIMIT:
-                    lost_messages = len(messages)
+                    lost_messages = len(messages) - added
                     break
                 self._messages.append(message)
                 added += 1
 
         if lost_messages is not None:
-            _logger.error("message queue limit (%d) reached => lost %d messages!", self.QUEUE_LIMIT, len(messages) - added)
+            _logger.error("message queue limit (%d) reached => lost %d messages!", self.QUEUE_LIMIT, lost_messages)
 
     def _close_connection(self):
         try:
@@ -179,7 +179,7 @@ class ProxyStore(threading.Thread):
         with self._lock:
             while len(messages) < self._batch_size:
                 try:
-                    m = self._messages.pop()
+                    m = self._messages.popleft()
                     messages.append(m)
                 except IndexError:
                     self._write_immediately = False
