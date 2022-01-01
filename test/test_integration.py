@@ -83,7 +83,6 @@ class TestIntegration(unittest.TestCase):
     def create_config_file(cls, test_config_data, topics):
         mqtt_config = copy.deepcopy(test_config_data["mqtt"])
         mqtt_config[MqttConfKey.SUBSCRIPTIONS] = topics
-        # mqtt_config[MqttConfKey.SKIP_SUBSCRIPTION_REGEXES] = self.skip_topics
 
         database_config = copy.deepcopy(SetupTest.get_database_params())
         database_config[DatabaseConfKey.WAIT_MAX_SECONDS] = 1
@@ -109,7 +108,7 @@ class TestIntegration(unittest.TestCase):
             try:
                 run_service(**kwargs)
             except Exception as ex:
-                self.mocked_lifecycle.set_exception(ex)
+                self.mocked_lifecycle.set_exception(ex)  # exception is invisible otherwise!
                 raise
 
         self.service_thread = threading.Thread(target=run_service_locally, daemon=True)

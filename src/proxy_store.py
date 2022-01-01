@@ -164,7 +164,7 @@ class ProxyStore(threading.Thread):
         if self._write_immediately:
             return True
 
-        if message_count > self._batch_size:
+        if message_count >= self._batch_size:
             return True
 
         diff_seconds = (self._now() - self._message_store.last_store_time).total_seconds()

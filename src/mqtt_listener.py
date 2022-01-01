@@ -33,18 +33,28 @@ class MqttListener(MqttClient):
         if not self._subscriptions:
             self._subscribed = True
 
+    @property
+    def is_connected(self):
+        with self._lock:
+            return self._is_connected and self._subscribed
+
     def connect(self):
         super().connect()
 
         time_step = 0.05
         time_counter = 0
 
-        while LifecycleControl.should_proceed() and not self._shutdown:
-            if self._try_to_subscribe():
-                break
-            time_counter += LifecycleControl.get_instance().sleep(time_step)
-            if time_counter > 15:
-                raise MqttException("couldn't subscribe to MQTT topics... no connection?!")
+        try:
+            while LifecycleControl.should_proceed() and not self._shutdown:
+                if self._try_to_subscribe():
+                    break
+                time_counter += LifecycleControl.sleep(time_step)
+                if time_counter > 15:
+                    raise MqttException("couldn't subscribe to MQTT topics... no connection?!")
+
+        except Exception:
+            self._subscribed = False
+            raise
 
     def _try_to_subscribe(self) -> bool:
         """wait for getting mqtt connect callback called"""
