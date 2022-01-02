@@ -94,6 +94,6 @@ class MessageStore(Database):
 
         self._connection.commit()
 
-        _logger.info("%d row(s) cleaned up.", cursor_rowcount)
+        _logger.info("clean up: %d row(s) deleted", cursor_rowcount)
 
         self._last_clean_up_time = self._now()
