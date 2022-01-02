@@ -70,6 +70,8 @@ def run_service(config_file, create, log_file, log_level, print_logs, systemd_mo
             log_file, log_level, print_logs, systemd_mode
         )
 
+        _logger.debug("start")
+
         if create:
             creator = SchemaCreator(app_config.get_database_config())
             creator.connect()
@@ -79,6 +81,8 @@ def run_service(config_file, create, log_file, log_level, print_logs, systemd_mo
             runner.loop()
 
     finally:
+        _logger.info("shutdown")
+
         if creator is not None:
             creator.close()
         if runner is not None:
