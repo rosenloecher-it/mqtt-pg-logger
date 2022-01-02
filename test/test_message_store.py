@@ -3,6 +3,7 @@ import unittest
 
 from tzlocal import get_localzone
 
+from src.database import DatabaseConfKey
 from src.message_store import MessageStore
 from src.message import Message
 from test.setup_test import SetupTest
@@ -10,13 +11,19 @@ from test.setup_test import SetupTest
 
 class TestMessageStore(unittest.TestCase):
 
+    CONFIG_CLEAN_UP_AFTER_DAYS = 21
+
     def setUp(self):
         SetupTest.init_database()
         # SetupTest.init_logging()
 
         SetupTest.execute_commands(["delete from journal"])
 
+        self.config_clean_up_after_days = 21
+
         database_params = SetupTest.get_database_params()
+        database_params[DatabaseConfKey.CLEAN_UP_AFTER_DAYS] = self.CONFIG_CLEAN_UP_AFTER_DAYS
+
         self.database = MessageStore(database_params)
         self.database.connect()
 
@@ -56,8 +63,11 @@ class TestMessageStore(unittest.TestCase):
             self.assertEqual(current, compare)
 
     def test_cleanup(self):
+        self.assertEqual(self.database._clean_up_after_days, self.CONFIG_CLEAN_UP_AFTER_DAYS)
+
         time_now = datetime.datetime.now(tz=get_localzone())
-        time_insert_to_remove = time_now - datetime.timedelta(days=self.database._clean_up_after_days + 1)
+        time_remain = time_now - datetime.timedelta(days=self.database._clean_up_after_days - 1)
+        time_remove = time_now - datetime.timedelta(days=self.database._clean_up_after_days + 1)
 
         self.database.now = time_now
 
@@ -71,10 +81,13 @@ class TestMessageStore(unittest.TestCase):
                 time=time,
             )
 
-        messages = [generate_message(i, time_insert_to_remove) for i in range(1, 11)]
+        messages = [generate_message(i, time_remove) for i in range(1, 11)]
         self.database.store(messages)
-        messages = [generate_message(i + 1000, time_now) for i in range(1, 11)]
+        messages = [generate_message(i + 1000, time_remain) for i in range(1, 11)]
         self.database.store(messages)
+
+        fetched = SetupTest.query_one("select count(1) from journal")
+        self.assertEqual(fetched["count"], 20)
 
         self.database.clean_up()
         fetched = SetupTest.query_one("select count(1) from journal")

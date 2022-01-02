@@ -80,12 +80,20 @@ class MessageStore(Database):
         LifecycleControl.notify(StatusNotification.MESSAGE_STORE_STORED)
 
     def clean_up(self):
-        # noinspection
-        delete_statement = sql.SQL("DELETE FROM {} WHERE time < NOW() - INTERVAL '%s days'").format(sql.Identifier(self._table_name))
+        if self._clean_up_after_days <= 0:
+            return  # skip
+
+        time_limit = self._now() - datetime.timedelta(days=self._clean_up_after_days)
+
+        delete_statement = sql.SQL("DELETE FROM {table} WHERE time < {time_limit}")\
+            .format(table=sql.Identifier(self._table_name), time_limit=sql.Literal(time_limit))
 
         with self._connection.cursor() as cursor:
-            cursor.execute(delete_statement, (self._clean_up_after_days,))
-            _logger.info("%d row(s) cleaned up.", cursor.rowcount)
+            cursor.execute(delete_statement)
+            cursor_rowcount = cursor.rowcount
 
         self._connection.commit()
+
+        _logger.info("%d row(s) cleaned up.", cursor_rowcount)
+
         self._last_clean_up_time = self._now()
