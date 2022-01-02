@@ -25,8 +25,8 @@ class AppConfig:
     def __init__(self, config_file):
         self._config_data = {}
 
-        if not os.path.isfile(config_file):
-            raise FileNotFoundError('config file ({}) does not exist!'.format(config_file))
+        self.check_config_file_access(config_file)
+
         with open(config_file, 'r') as stream:
             file_data = yaml.unsafe_load(stream)
 
@@ -46,4 +46,12 @@ class AppConfig:
     def get_mqtt_config(self):
         return self._config_data["mqtt"]
 
-        # self.config[CONFKEY_MAIN] = {**main_section, **self.cli}
+    @classmethod
+    def check_config_file_access(cls, config_file):
+        if not os.path.isfile(config_file):
+            raise FileNotFoundError('config file ({}) does not exist!'.format(config_file))
+
+        permissions = oct(os.stat(config_file).st_mode & 0o777)[2:]
+        if permissions != "600":
+            extra = "change via 'chmod'. this config file may contain sensitive information."
+            raise PermissionError(f"wrong config file permissions ({config_file}: expected 600, got {permissions})! {extra}")

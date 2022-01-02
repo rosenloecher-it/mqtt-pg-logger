@@ -1,4 +1,5 @@
 import copy
+import os
 import threading
 import time
 import unittest
@@ -46,6 +47,8 @@ class BaseTestIntegration(unittest.TestCase):
         config_file = SetupTest.get_test_path("config_file.yaml")
         with open(config_file, 'w') as write_file:
             yaml.dump(data, write_file, default_flow_style=False)
+
+        os.chmod(config_file, 0o600)
 
         return config_file
 
