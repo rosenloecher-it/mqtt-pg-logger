@@ -26,6 +26,9 @@ class MessageStore(Database):
         self._last_connect_time = None
         self._last_store_time = self._now()
 
+        self._status_stored_message_count = 0
+        self._status_last_log = self._now()
+
     def connect(self):
         super().connect()
 
@@ -63,20 +66,26 @@ class MessageStore(Database):
                 for m in messages:
                     data = (m.message_id, m.topic, m.text, m.qos, m.retain, m.time)
                     copy.write_row(data)
-            _logger.debug("%d row(s) inserted.", cursor.rowcount)
-
-        self._last_store_time = self._now()
+            cursor_rowcount = cursor.rowcount
 
         self._connection.commit()
+
+        self._status_stored_message_count += cursor_rowcount
+        _logger.debug("%d row(s) inserted.", cursor_rowcount)
+
+        if _logger.isEnabledFor(logging.INFO) and (self._now() - self._status_last_log).total_seconds() > 300:
+            self._status_last_log = self._now()
+            _logger.info("overall messages: stored=%d", self._status_stored_message_count)
 
         LifecycleControl.notify(StatusNotification.MESSAGE_STORE_STORED)
 
     def clean_up(self):
+        # noinspection
         delete_statement = sql.SQL("DELETE FROM {} WHERE time < NOW() - INTERVAL '%s days'").format(sql.Identifier(self._table_name))
 
         with self._connection.cursor() as cursor:
             cursor.execute(delete_statement, (self._clean_up_after_days,))
-            _logger.debug("%d row(s) cleaned up.", cursor.rowcount)
+            _logger.info("%d row(s) cleaned up.", cursor.rowcount)
 
         self._connection.commit()
         self._last_clean_up_time = self._now()

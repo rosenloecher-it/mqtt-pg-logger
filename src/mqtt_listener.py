@@ -20,8 +20,10 @@ class MqttListener(MqttClient):
         self._subscriptions = set()
         self._skip_subscription_regexes = []
         self._messages = []  # type: List[Message]
-        self._received_message_count = 0
-        self._skipped_message_count = 0
+
+        self._status_received_message_count = 0
+        self._status_skipped_message_count = 0
+        self._status_last_log = self._now()
 
         skip_subscription_regexes = self.list_to_set(config.get(MqttConfKey.SKIP_SUBSCRIPTION_REGEXES))
         for skip_subscription_regex in skip_subscription_regexes:
@@ -114,18 +116,21 @@ class MqttListener(MqttClient):
                 with self._lock:
                     if accept_message:
                         self._messages.append(message)
-                    else:
-                        self._skipped_message_count += 1
-                    self._received_message_count += 1
 
-                    skipped_message_count = self._skipped_message_count
-                    received_message_count = self._received_message_count
+                    self._status_received_message_count += 1
+                    self._status_skipped_message_count += 0 if accept_message else 1
+                    status_last_log = self._status_last_log
 
-                if received_message_count % 100 == 0:
-                    if skipped_message_count > 0:
-                        _logger.info("status: received=%d; skipped=%d", received_message_count, skipped_message_count)
+                if _logger.isEnabledFor(logging.INFO) and (self._now() - status_last_log).total_seconds() > 300:
+                    with self._lock:
+                        received_count = self._status_received_message_count
+                        skipped_count = self._status_skipped_message_count
+                        self._status_last_log = self._now()
+
+                    if skipped_count > 0:
+                        _logger.info("overall messages: received=%d; skipped=%d", received_count, skipped_count)
                     else:
-                        _logger.info("status: received=%d", received_message_count)
+                        _logger.info("overall messages: received=%d", received_count)
 
         except Exception as ex:
             _logger.exception(ex)
