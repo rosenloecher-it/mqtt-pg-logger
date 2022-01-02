@@ -64,7 +64,7 @@ class MockedLifecycleInstance(LifecycleInstance):
 class MockedLifecycleControl(LifecycleControl):
 
     @classmethod
-    def _create_instance(cls):
+    def _create_instance(cls) -> MockedLifecycleInstance:
         return MockedLifecycleInstance()
 
     @classmethod

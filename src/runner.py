@@ -28,6 +28,9 @@ class Runner:
             while LifecycleControl.should_proceed():
                 busy = False
 
+                if not self._store.is_alive():
+                    raise RuntimeError("database thread was finished! abort.")
+
                 messages = self._mqtt.get_messages()
                 if messages:
                     there_has_been_messages_to_notify = True

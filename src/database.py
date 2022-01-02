@@ -112,7 +112,7 @@ class Database(abc.ABC):
             self._last_connect_time = self._now()
 
         except psycopg.OperationalError as ex:
-            raise DatabaseException(str(ex))
+            raise DatabaseException(str(ex)) from ex
 
     def close(self):
         try:

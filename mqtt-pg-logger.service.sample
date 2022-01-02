@@ -5,7 +5,7 @@ Description=MQTT Postgres Logger
 Type=simple
 ExecStart=/opt/mqtt-pg-logger/mqtt-pg-logger.sh --systemd-mode --config-file /opt/mqtt-pg-logger/mqtt-pg-logger.yaml
 Restart=always
-RestartSec=60
+RestartSec=15
 WorkingDirectory=/opt/mqtt-pg-logger
 User=<your service user>
 

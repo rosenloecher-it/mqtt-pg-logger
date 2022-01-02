@@ -31,7 +31,26 @@ class SentMessage:
     message_id = attr.ib(default=None)  # type: int
 
 
-class TestIntegration(unittest.TestCase):
+class BaseTestIntegration(unittest.TestCase):
+
+    @classmethod
+    def create_config_file(cls, test_config_data, database_config, topics):
+        mqtt_config = copy.deepcopy(test_config_data["mqtt"])
+        mqtt_config[MqttConfKey.SUBSCRIPTIONS] = topics
+
+        data = {
+            "database": database_config,
+            "mqtt": mqtt_config,
+        }
+
+        config_file = SetupTest.get_test_path("config_file.yaml")
+        with open(config_file, 'w') as write_file:
+            yaml.dump(data, write_file, default_flow_style=False)
+
+        return config_file
+
+
+class TestIntegration(BaseTestIntegration):
 
     def setUp(self):
         SetupTest.init_database(skip_schema_creation=True)
@@ -43,13 +62,15 @@ class TestIntegration(unittest.TestCase):
         self.subscriptions = [
             Subscription(topic=sub_base + "/inside/log1", subscription=sub_base + "/inside/#", skip=False),
             Subscription(topic=sub_base + "/inside/log2", subscription=sub_base + "/inside/#", skip=False),
-            # Subscription(topic=sub_base + "inside/log2", subscription=sub_base + "/inside/log2/#", skip=False),
             Subscription(topic=sub_base + "/outside", subscription=None, skip=True),
         ]
         topics = [s.subscription for s in self.subscriptions if s.subscription]
 
-        self._config_file = self.create_config_file(test_config_data, topics)
-        run_service(self._config_file, True, None, "info", True, True)
+        database_config = copy.deepcopy(SetupTest.get_database_params())
+        database_config[DatabaseConfKey.WAIT_MAX_SECONDS] = 1
+
+        self._config_file = self.create_config_file(test_config_data, database_config, topics)
+        run_service(self._config_file, True, None, "info", True, True)  # create schema
 
         # expected no error, table was created
         fetched = SetupTest.query_one("select count(1) from journal")
@@ -78,25 +99,6 @@ class TestIntegration(unittest.TestCase):
                 pass
 
         SetupTest.close_database()
-
-    @classmethod
-    def create_config_file(cls, test_config_data, topics):
-        mqtt_config = copy.deepcopy(test_config_data["mqtt"])
-        mqtt_config[MqttConfKey.SUBSCRIPTIONS] = topics
-
-        database_config = copy.deepcopy(SetupTest.get_database_params())
-        database_config[DatabaseConfKey.WAIT_MAX_SECONDS] = 1
-
-        data = {
-            "database": database_config,
-            "mqtt": mqtt_config,
-        }
-
-        config_file = SetupTest.get_test_path("confifg_file.yaml")
-        with open(config_file, 'w') as write_file:
-            yaml.dump(data, write_file, default_flow_style=False)
-
-        return config_file
 
     def run_service_threaded(self):
         kwargs = {
@@ -156,4 +158,43 @@ class TestIntegration(unittest.TestCase):
             fetched_message = fetched_messages[sent_message.text]
             self.assertEqual(fetched_message["topic"], sent_message.subscription.topic)
 
-        pass
+
+class TestIntegrationErrorNoDatabase(BaseTestIntegration):
+
+    def setUp(self):
+        # SetupTest.init_logging()
+
+        config_data = SetupTest.read_test_config()
+
+        database_config = config_data["database"]
+        database_config[DatabaseConfKey.HOST] = "host_should_not_exit"
+        database_config[DatabaseConfKey.PORT] = 5435
+        database_config[DatabaseConfKey.USER] = "no_matter"
+        database_config[DatabaseConfKey.PASSWORD] = "no_matter"
+        database_config[DatabaseConfKey.DATABASE] = "no_matter"
+        database_config[DatabaseConfKey.TABLE_NAME] = "no_matter"
+
+        self._config_file = self.create_config_file(config_data, database_config, ["#"])
+
+        self.service_thread = None
+
+        self.mocked_lifecycle = MockedLifecycleControl.get_instance()  # type: MockedLifecycleInstance
+        self.mocked_lifecycle.reset()
+
+    def tearDown(self):
+
+        if self.service_thread:
+            self.mocked_lifecycle.shutdown()
+
+            try:
+                while self.service_thread.is_alive():
+                    self.service_thread.join(1)  # join shortly to not block KeyboardInterrupt exceptions
+            except KeyboardInterrupt:
+                pass
+
+    @mock.patch.object(LifecycleControl, "get_instance", MockedLifecycleControl.get_instance)
+    def test_no_database_abort(self):
+        with self.assertRaises(RuntimeError) as ex:
+            run_service(self._config_file, False, None, "info", True, True)
+
+        self.assertTrue("database thread was finished" in str(ex.exception))

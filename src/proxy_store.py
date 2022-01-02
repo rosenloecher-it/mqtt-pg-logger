@@ -7,7 +7,7 @@ from typing import List
 
 from tzlocal import get_localzone
 
-from src.database import DatabaseException, DatabaseConfKey
+from src.database import DatabaseConfKey
 from src.message import Message
 from src.message_store import MessageStore
 
@@ -83,42 +83,33 @@ class ProxyStore(threading.Thread):
 
     def run(self):
         step_time = 0.05
-        last_loops_with_error_count = 0
 
         try:
             while not self._is_closing():
                 busy = False
-                if last_loops_with_error_count > 10:
-                    time.sleep(2)
 
-                try:
-                    if self._check_connection():
+                if self._check_connection():
+                    busy = True
+                if self._should_store_messages():
+                    if self._store_messages():
                         busy = True
-                    if self._should_store_messages():
-                        if self._store_messages():
-                            busy = True
-                    if not busy:
-                        if self._clean_up():
-                            busy = True
+                if not busy:
+                    if self._clean_up():
+                        busy = True
 
-                    if self._message_store.last_connect_time is not None:
-                        diff_seconds = (self._now() - self._message_store.last_connect_time).total_seconds()
-                        if diff_seconds > self.RECONNECT_AFTER_SECONDS:
-                            _logger.debug(f"automatically closing connection after {self.RECONNECT_AFTER_SECONDS}s.")
-                            self._close_connection()
-                            busy = True
+                if self._message_store.last_connect_time is not None:
+                    diff_seconds = (self._now() - self._message_store.last_connect_time).total_seconds()
+                    if diff_seconds > self.RECONNECT_AFTER_SECONDS:
+                        _logger.debug(f"automatically closing connection after {self.RECONNECT_AFTER_SECONDS}s.")
+                        self._close_connection()
+                        busy = True
 
-                    time.sleep(step_time / 100 if busy else step_time)
-                    last_loops_with_error_count = 0
-
-                except Exception as ex:
-                    last_loops_with_error_count += 1
-                    self._handle_exception_but_prevent_stacktrace(ex)
-                    self._close_connection()
-                    # proceed after connection loss
+                time.sleep(step_time / 100 if busy else step_time)
 
         except Exception as ex:
+            # stop thread / break loop => shutdown service => restart via systemd after 15 (?) seconds
             _logger.exception(ex)
+            self.close()
         finally:
             self._close_connection()
 
@@ -136,15 +127,6 @@ class ProxyStore(threading.Thread):
             self._message_store.clean_up()
             return True
         return False
-
-    def _handle_exception_but_prevent_stacktrace(self, ex: Exception):
-        error_text = str(ex)
-        if error_text == self._last_error_text:
-            _logger.error(error_text)
-        else:
-            self._last_error_text = error_text
-            show_tracback = not isinstance(ex, DatabaseException)
-            _logger.error(ex, exc_info=show_tracback)
 
     def _should_store_messages(self) -> bool:
         message_count = len(self._messages)
