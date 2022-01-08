@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import sys
 from typing import Optional
 
 import click
@@ -50,11 +51,11 @@ def _main(config_file, create, log_file, log_level, print_logs, systemd_mode):
         run_service(config_file, create, log_file, log_level, print_logs, systemd_mode)
 
     except KeyboardInterrupt:
-        return 0
+        pass  # exits 0 by default
 
     except Exception as ex:
         _logger.exception(ex)
-        return 1
+        sys.exit(1)  # a simple return is not understood by click
 
 
 def run_service(config_file, create, log_file, log_level, print_logs, systemd_mode):
@@ -90,4 +91,4 @@ def run_service(config_file, create, log_file, log_level, print_logs, systemd_mo
 
 
 if __name__ == '__main__':
-    _main()
+    _main()  # exit codes must be handled by click!
