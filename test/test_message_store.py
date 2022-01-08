@@ -117,18 +117,23 @@ class TestMessageStore(unittest.TestCase):
     def test_trigger_invalid_json(self):
         message1 = Message(
             message_id=1, topic="topic1", qos=1, retain=0,
-            text='text',
-            time=datetime.datetime(2020, 2, 2, 9, 0, 0, tzinfo=get_localzone()),
+            text='text',  # is not converted to JSON
+            time=datetime.datetime(2020, 2, 2, 1, 0, 0, tzinfo=get_localzone()),
         )
         message2 = Message(
             message_id=2, topic="topic2", qos=1, retain=0,
-            text='{"text": "text", "int": 9 ',  # invalid json
-            time=datetime.datetime(2020, 2, 2, 9, 0, 0, tzinfo=get_localzone()),
+            text='{"text": "text", "int": 9 ',  # invalid JSON
+            time=datetime.datetime(2020, 2, 2, 2, 0, 0, tzinfo=get_localzone()),
         )
-        self.database.store([message1, message2])
+        message3 = Message(
+            message_id=3, topic="topic3", qos=1, retain=0,
+            text='123',  # would normally converted to JSON, but is suppressed by the convert function
+            time=datetime.datetime(2020, 2, 2, 3, 0, 0, tzinfo=get_localzone()),
+        )
+        self.database.store([message1, message2, message3])
 
         fetched = SetupTest.query_one("select count(1) from journal")
-        self.assertEqual(fetched["count"], 2)
+        self.assertEqual(fetched["count"], 3)
 
         def check_message(message_id, compare_message):
             row = SetupTest.query_all(f"select * from journal where message_id={message_id}")[0]
@@ -141,3 +146,4 @@ class TestMessageStore(unittest.TestCase):
 
         check_message(1, message1)
         check_message(2, message2)
+        check_message(3, message3)

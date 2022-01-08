@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION journal_text_to_json()
   AS
 $$
 BEGIN
-	IF NEW.data IS NULL AND NEW.text IS NOT NULL THEN
+	IF NEW.data IS NULL AND NEW.text IS NOT NULL AND NEW.text SIMILAR TO '(\{|\[)%' THEN
         BEGIN
             NEW.data = NEW.text::JSON;
         EXCEPTION WHEN OTHERS THEN
