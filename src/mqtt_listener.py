@@ -25,6 +25,9 @@ class MqttListener(MqttClient):
         self._status_skipped_message_count = 0
         self._status_last_log = self._now()
 
+        # MQTT V3 Protocol Specification: Do not use Message ID 0. It is reserved as an invalid Message ID.
+        self._filter_message_id_0 = config.get(MqttConfKey.FILTER_MESSAGE_ID_0, True)
+
         skip_subscription_regexes = self.list_to_set(config.get(MqttConfKey.SKIP_SUBSCRIPTION_REGEXES))
         for skip_subscription_regex in skip_subscription_regexes:
             if skip_subscription_regex:
@@ -114,6 +117,9 @@ class MqttListener(MqttClient):
                 accept_message = self._accept_topic(message.topic)
 
                 with self._lock:
+                    if accept_message:
+                        if message.message_id <= 0 and self._filter_message_id_0:
+                            accept_message = False
                     if accept_message:
                         self._messages.append(message)
 

@@ -8,6 +8,7 @@ mqtt:
     host:                       "<your_broker>"
     port:                       1883
     protocol:                   4  # 3==MQTTv31 (default), 4==MQTTv311, 5==default/MQTTv5,
+    # filter_message_id_0:      True
     subscriptions:              ["smarthome/#", "smarthome2/#"]  # topics
     skip_subscription_regexes:  []  # regex for topics
 

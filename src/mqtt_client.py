@@ -25,6 +25,8 @@ class MqttConfKey:
     SSL_INSECURE = "ssl_insecure"
     SSL_KEYFILE = "ssl_keyfile"
 
+    FILTER_MESSAGE_ID_0 = "filter_message_id_0"
+
     SUBSCRIPTIONS = "subscriptions"
     SKIP_SUBSCRIPTION_REGEXES = "skip_subscription_regexes"
 
@@ -62,6 +64,11 @@ MQTT_JSONSCHEMA = {
         MqttConfKey.SSL_KEYFILE: {"type": "string", "minLength": 1},
         MqttConfKey.USER: {"type": "string", "minLength": 1},
         MqttConfKey.PASSWORD: {"type": "string"},
+
+        MqttConfKey.FILTER_MESSAGE_ID_0: {
+            "type": "boolean",
+            "description": "Filter all messages with Message ID 0. Default: True. '0' is reserved as an invalid Message ID.",
+        },
 
         MqttConfKey.SUBSCRIPTIONS: SUBSCRIPTION_JSONSCHEMA,
         MqttConfKey.SKIP_SUBSCRIPTION_REGEXES: SKIP_SUBSCRIPTION_JSONSCHEMA,
@@ -104,7 +111,7 @@ class MqttClient:
         self._lock = threading.Lock()
 
         self._host = config[MqttConfKey.HOST]
-        self.port = config.get(MqttConfKey.PORT)
+        self._port = config.get(MqttConfKey.PORT)
         self._keepalive = config.get(MqttConfKey.KEEPALIVE, self.DEFAULT_KEEPALIVE)
 
         protocol = config.get(MqttConfKey.PROTOCOL, self.DEFAULT_PROTOCOL)
