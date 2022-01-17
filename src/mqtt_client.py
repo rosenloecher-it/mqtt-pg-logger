@@ -67,7 +67,7 @@ MQTT_JSONSCHEMA = {
 
         MqttConfKey.FILTER_MESSAGE_ID_0: {
             "type": "boolean",
-            "description": "Filter all messages with Message ID 0. Default: True. '0' is reserved as an invalid Message ID.",
+            "description": "Filter all messages with Message ID 0. Default: False. '0' is reserved as an invalid Message ID.",
         },
 
         MqttConfKey.SUBSCRIPTIONS: SUBSCRIPTION_JSONSCHEMA,
