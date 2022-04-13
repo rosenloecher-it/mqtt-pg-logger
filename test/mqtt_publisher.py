@@ -17,8 +17,8 @@ class MqttPublisher(MqttClient):
             if self._shutdown:
                 return
 
-            if not self._is_connected:
-                raise MqttException(self._disconnected_error_info or "MQTT is not connected!")
+            if not self._is_connected or self._connection_error_info:
+                raise MqttException(self._connection_error_info or "MQTT is not connected!")
 
             return self._client.publish(
                 topic=topic,
@@ -26,9 +26,6 @@ class MqttPublisher(MqttClient):
                 qos=2,
                 retain=False
             )
-
-    def _get_default_client_id(self):
-        return MqttPublisher.get_default_client_id()
 
     @classmethod
     def get_default_client_id(cls):

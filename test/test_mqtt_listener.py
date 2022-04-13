@@ -85,7 +85,7 @@ class TestMqttListenerConnectionErrors(unittest.TestCase):
         self.assertFalse(listener.is_connected)
 
         with self.assertRaises(MqttException):
-            listener.get_messages()
+            listener.ensure_connection()
 
     @mock.patch('paho.mqtt.client.Client')
     @mock.patch.object(LifecycleControl, "_create_instance", lambda: MagicMock())

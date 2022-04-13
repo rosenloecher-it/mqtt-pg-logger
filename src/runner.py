@@ -26,7 +26,6 @@ class Runner:
 
         try:
             while LifecycleControl.should_proceed():
-                busy = False
 
                 if not self._store.is_alive():
                     raise RuntimeError("database thread was finished! abort.")
@@ -35,13 +34,16 @@ class Runner:
                 if messages:
                     there_has_been_messages_to_notify = True
                     self._store.queue(messages)
-                    busy = True
 
-                if len(messages) == 0 and there_has_been_messages_to_notify:
-                    there_has_been_messages_to_notify = False
-                    LifecycleControl.notify(StatusNotification.RUNNER_QUEUE_EMPTIED)  # test related
+                if len(messages) == 0:
+                    # not busy
+                    self._mqtt.ensure_connection()
 
-                time.sleep(time_step / 100 if busy else time_step)
+                    if there_has_been_messages_to_notify:
+                        there_has_been_messages_to_notify = False
+                        LifecycleControl.notify(StatusNotification.RUNNER_QUEUE_EMPTIED)  # test related
+
+                    time.sleep(time_step)
 
         except KeyboardInterrupt:
             # gets called without signal-handler

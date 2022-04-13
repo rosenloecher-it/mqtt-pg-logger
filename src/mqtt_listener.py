@@ -1,5 +1,4 @@
 import logging
-import random
 import re
 from typing import List, Set
 
@@ -88,14 +87,8 @@ class MqttListener(MqttClient):
                 items_set.add(item)
         return items_set
 
-    def _get_default_client_id(self):
-        return f"pg_logger_{random.randint(1, 9999999999)}"
-
     def get_messages(self) -> List[Message]:
         with self._lock:
-            if not self._is_connected:
-                error_info = " " + self._disconnected_error_info if self._disconnected_error_info else ""
-                raise MqttException("cannot read messages from a disconnected MQTT listener!{}".format(error_info))
             messages = self._messages  # type: List[Message]
             self._messages = []
         return messages
