@@ -132,5 +132,5 @@ class Database(abc.ABC):
 
     @classmethod
     def _now(cls) -> datetime:
-        """overwritable datetime.now for testing"""
+        """overwritable `datetime.now` for testing"""
         return datetime.datetime.now(tz=get_localzone())

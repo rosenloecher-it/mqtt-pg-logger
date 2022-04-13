@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 
 
 class ProxyStore(threading.Thread):
-    """A async proxy to MessageStore which handles batches, queuing"""
+    """An async proxy to MessageStore which handles batches, queuing"""
 
     RECONNECT_AFTER_SECONDS = 3600
 
@@ -177,5 +177,5 @@ class ProxyStore(threading.Thread):
 
     @classmethod
     def _now(cls) -> datetime:
-        """overwritable datetime.now for testing"""
+        """overwritable `datetime.now` for testing"""
         return datetime.datetime.now(tz=get_localzone())

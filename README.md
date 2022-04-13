@@ -63,7 +63,7 @@ Edit your `mqtt-pg-logger.yaml`. See comments there.
 # prepare your own service script based on mqtt-pg-logger.service.sample
 cp ./mqtt-pg-logger.service.sample ./mqtt-pg-logger.service
 
-# edit/adapt pathes and user in mqtt-pg-logger.service
+# edit/adapt paths and user in mqtt-pg-logger.service
 vi ./mqtt-pg-logger.service
 
 # install service
@@ -87,16 +87,16 @@ sudo systemctl enable mqtt-pg-logger.service
 
 ## Database infos
 
-Consider running a `VACUUM ANALYZE` on your Postgres database on a periodic base (CRON).  
+Consider running a `VACUUM ANALYZE` on your Postgres database on a periodic base (CRON).
 This will [reclaim storage occupied by dead tuples](https://postgrespro.com/docs/postgresql/13/sql-vacuum).
 
 ### MQTT broker related infos
 
-If no messages get logged check your broker. 
+If no messages get logged check your broker.
 ```bash
 sudo apt-get install mosquitto-clients
 
-# preprare credentials
+# prepare credentials
 SERVER="<your server>"
 
 # start listener
@@ -111,11 +111,15 @@ mosquitto_pub -h $SERVER -d -t smarthome/test -n -r -d
 
 Not that retained messages get logged again after a restart of the service.
 And especially stale messages of meanwhile unused topic gets logged again and again.
-Therefore, consider clearing all retained messages on a periodic base (CRON). 
 ```bash
 SERVER="<your server>"
 BASE_TOPIC="test/#"  # or "#"
+
+# clear all retained topics
 mosquitto_sub -h "$SERVER" -t "$BASE_TOPIC" -F "%t" --retained-only | while read line; do mosquitto_pub -h "$SERVER" -t "${line% *}" -r -n; done
+
+# or clear a single topic
+mosquitto_pub -h "$SERVER" -t the/topic -n -r -d
 ```
 
 ## Maintainer & License

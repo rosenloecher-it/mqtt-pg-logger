@@ -127,7 +127,7 @@ class TestMessageStore(unittest.TestCase):
         )
         message3 = Message(
             message_id=3, topic="topic3", qos=1, retain=0,
-            text='123',  # would normally converted to JSON, but is suppressed by the convert function
+            text='123',  # would normally be converted to JSON, but is suppressed by the convert function
             time=datetime.datetime(2020, 2, 2, 3, 0, 0, tzinfo=get_localzone()),
         )
         self.database.store([message1, message2, message3])
