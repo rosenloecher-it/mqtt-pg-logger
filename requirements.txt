@@ -1,7 +1,7 @@
 attrs == 21.4.0
-click == 8.1.2
-jsonschema == 4.4.0
+click == 8.1.3
+jsonschema == 4.6.2
 paho-mqtt == 1.6.1
-psycopg == 3.0.11
+psycopg == 3.0.15
 pyyaml == 6.0
 tzlocal == 4.2
