@@ -103,7 +103,7 @@ class MqttClient:
 
         self._client = None
         self._is_connected = False
-        self._connection_error_info = None  # type: Optional[str]
+        self._connection_error_info: Optional[str] = None
         self._subscribed = False
         self._shutdown = False
 

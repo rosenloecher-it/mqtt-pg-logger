@@ -28,7 +28,7 @@ class SetupTest:
     DATABASE_DIR = os.path.join(TEST_DIR, "database")
 
     _logging_inited = False
-    _postgresql = None  # type: Optional[testing.postgresql.Postgresql]
+    _postgresql: Optional[testing.postgresql.Postgresql] = None
 
     @classmethod
     def init_logging(cls):

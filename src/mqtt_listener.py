@@ -18,7 +18,7 @@ class MqttListener(MqttClient):
 
         self._subscriptions = set()
         self._skip_subscription_regexes = []
-        self._messages = []  # type: List[Message]
+        self._messages: List[Message] = []
 
         self._status_received_message_count = 0
         self._status_skipped_message_count = 0
@@ -89,7 +89,7 @@ class MqttListener(MqttClient):
 
     def get_messages(self) -> List[Message]:
         with self._lock:
-            messages = self._messages  # type: List[Message]
+            messages = self._messages
             self._messages = []
         return messages
 

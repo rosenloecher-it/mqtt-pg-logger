@@ -12,7 +12,7 @@ class MockedLifecycleInstance(LifecycleInstance):
         super().__init__()
 
         self._set = set()
-        self._ex = None  # type: Optional[Exception]
+        self._ex: Optional[Exception] = None
 
     def reset(self):
         super().reset()

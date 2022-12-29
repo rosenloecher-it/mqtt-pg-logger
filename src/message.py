@@ -6,16 +6,16 @@ from paho.mqtt.client import MQTTMessage
 
 @attr.s
 class Message:
-    message_id = attr.ib(default=None)  # type: int
+    message_id: int = attr.ib(default=None)
 
-    topic = attr.ib(default=None)  # type: str
-    text = attr.ib(default=None)  # type: str
+    topic: str = attr.ib(default=None)
+    text: str = attr.ib(default=None)
     # data is extracted in database
 
-    qos = attr.ib(default=None)  # type: int
-    retain = attr.ib(default=None)  # type: int
+    qos: int = attr.ib(default=None)
+    retain: int = attr.ib(default=None)
 
-    time = attr.ib(default=False)  # type: datetime.datetime
+    time: datetime.datetime = attr.ib(default=False)
 
     @classmethod
     def ensure_string(cls, value_in) -> str:

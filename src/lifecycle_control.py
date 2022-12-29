@@ -66,7 +66,7 @@ class LifecycleInstance:
 
 class LifecycleControl:
 
-    _instance = None  # type: LifecycleInstance  # vs. MockedLifecycleInstance
+    _instance: LifecycleInstance = None  # vs. MockedLifecycleInstance
     _creation_lock = threading.Lock()
 
     @classmethod

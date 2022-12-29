@@ -61,8 +61,8 @@ def _main(config_file, create, log_file, log_level, print_logs, systemd_mode):
 def run_service(config_file, create, log_file, log_level, print_logs, systemd_mode):
     """Logs MQTT messages to a Postgres database."""
 
-    creator = None  # type: Optional[SchemaCreator]
-    runner = None  # type: Optional[Runner]
+    creator: Optional[SchemaCreator] = None
+    runner: Optional[Runner] = None
 
     try:
         app_config = AppConfig(config_file)

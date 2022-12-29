@@ -13,23 +13,23 @@ from src.database import DatabaseConfKey
 from src.lifecycle_control import StatusNotification, LifecycleControl
 from src.mqtt_listener import MqttConfKey
 from src.mqtt_pg_logger import run_service
-from test.mocked_lifecycle_control import MockedLifecycleControl, MockedLifecycleInstance
+from test.mocked_lifecycle_control import MockedLifecycleControl
 from test.mqtt_publisher import MqttPublisher
 from test.setup_test import SetupTest
 
 
 @attr.s
 class Subscription:
-    topic = attr.ib()  # type: str
-    subscription = attr.ib()  # type: Optional[str]
-    skip = attr.ib()  # type: bool
+    topic: str = attr.ib()
+    subscription: Optional[str] = attr.ib()
+    skip: bool = attr.ib()
 
 
 @attr.s
 class SentMessage:
-    subscription = attr.ib()  # type: Subscription
-    text = attr.ib()  # type: str
-    message_id = attr.ib(default=None)  # type: int
+    subscription: Subscription = attr.ib()
+    text: str = attr.ib()
+    message_id: int = attr.ib(default=None)
 
 
 class BaseTestIntegration(unittest.TestCase):
@@ -86,7 +86,7 @@ class TestIntegration(BaseTestIntegration):
         self.mqtt_publisher = MqttPublisher(publisher_config_data)
         self.mqtt_publisher.connect()
 
-        self.mocked_lifecycle = MockedLifecycleControl.get_instance()  # type: MockedLifecycleInstance
+        self.mocked_lifecycle = MockedLifecycleControl.get_instance()
         self.mocked_lifecycle.reset()
 
     def tearDown(self):
@@ -181,7 +181,7 @@ class TestIntegrationErrorNoDatabase(BaseTestIntegration):
 
         self.service_thread = None
 
-        self.mocked_lifecycle = MockedLifecycleControl.get_instance()  # type: MockedLifecycleInstance
+        self.mocked_lifecycle = MockedLifecycleControl.get_instance()
         self.mocked_lifecycle.reset()
 
     def tearDown(self):

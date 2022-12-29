@@ -65,7 +65,7 @@ class Database(abc.ABC):
         # runtime properties
         self._connection = None
         self._auto_commit = False
-        self._last_connect_time = None  # type: Optional[datetime.datetime]
+        self._last_connect_time: Optional[datetime.datetime] = None
 
         # configuration
         self._connect_data = {
