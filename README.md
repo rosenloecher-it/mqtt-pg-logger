@@ -9,7 +9,16 @@ Collects [MQTT](https://en.wikipedia.org/wiki/MQTT) messages and stores them in 
 
 ## Startup
 
+### Prerequisites
+
+Python 3 ...
+
+```bash
+sudo apt-get install python3-dev python3-pip python3-venv python3-wheel -y
+```
+
 ### Prepare python environment
+
 ```bash
 cd /opt
 sudo mkdir mqtt-pg-logger
@@ -17,7 +26,7 @@ sudo chown <user>:<user> mqtt-pg-logger  # type in your user
 git clone https://github.com/rosenloecher-it/mqtt-pg-logger mqtt-pg-logger
 
 cd mqtt-pg-logger
-virtualenv -p /usr/bin/python3 venv
+python3 -m venv venv
 
 # activate venv
 source ./venv/bin/activate
