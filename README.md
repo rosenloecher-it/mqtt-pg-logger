@@ -92,6 +92,19 @@ journalctl -u mqtt-pg-logger --no-pager --since "5 minutes ago"
 sudo systemctl enable mqtt-pg-logger.service
 ```
 
+## Docker Approach (Alternative to virtualenv and systemd)
+
+```bash
+# Build the docker image
+docker build . -t mqtt-pg-logger:latest
+
+# Run the container to create the databases properly and see if your config is fine
+docker run --rm -v ./mqtt-pg-logger.yaml:/mqtt-pg-logger.yaml mqtt-pg-logger:latest mqtt_pg_logger.py --create --print-logs --config-file /mqtt-pg-logger.yaml
+
+# If everything is fine just start in in the background and with restart always option (similar to systemd)
+docker run -v ./mqtt-pg-logger.yaml:/mqtt-pg-logger.yaml --restart always -d  mqtt-pg-logger:latest 
+```
+
 ## Additional infos
 
 ## Database infos
