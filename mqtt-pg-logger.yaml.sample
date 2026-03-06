@@ -14,7 +14,7 @@ mqtt:
 
 database:
     host:                       "localhost"
-    port:                       5435
+    port:                       5432
     user:                       "<your database user>"
     password:                   "<your database password>"
     database:                   "<your database name>"
